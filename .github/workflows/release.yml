@@ -44,10 +44,7 @@ jobs:
       - name: Publish to Visual Studio Marketplace
         run: npx vsce publish --oidc --skip-duplicate --packagePath "$VSIX"
       - name: Publish to Open VSX
-        env:
-          # The first version needs an access token; later versions can use trusted publishing.
-          OVSX_PAT: ${{ secrets.OVSX_PAT }}
-        run: npx --yes ovsx@1.4.0 publish --skip-duplicate --packagePath "$VSIX"
+        run: npx --yes ovsx@1.4.0 publish --trusted-publishing --skip-duplicate --packagePath "$VSIX"
       - name: GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
