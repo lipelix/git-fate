@@ -1,0 +1,373 @@
+{
+  "name": "git-fate",
+  "displayName": "Git Fate",
+  "description": "Inline git blame, file blame with heatmap, file history and line history for VS Code.",
+  "version": "0.1.0",
+  "publisher": "lipelix",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lipelix/git-fate.git"
+  },
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "SCM Providers",
+    "Other"
+  ],
+  "keywords": [
+    "git",
+    "blame",
+    "history",
+    "annotate",
+    "line history"
+  ],
+  "icon": "media/icon.png",
+  "main": "./dist/extension.js",
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "gitFate.toggleFileBlame",
+        "title": "Toggle File Blame",
+        "category": "Git Fate",
+        "icon": "$(person)"
+      },
+      {
+        "command": "gitFate.toggleCurrentLineBlame",
+        "title": "Toggle Current Line Blame",
+        "category": "Git Fate"
+      },
+      {
+        "command": "gitFate.showFileHistory",
+        "title": "Show File History",
+        "category": "Git Fate",
+        "icon": "$(history)"
+      },
+      {
+        "command": "gitFate.showLineHistory",
+        "title": "Show Line History",
+        "category": "Git Fate",
+        "icon": "$(history)"
+      },
+      {
+        "command": "gitFate.showLineCommit",
+        "title": "Show Commit of Current Line",
+        "category": "Git Fate"
+      },
+      {
+        "command": "gitFate.openLineChanges",
+        "title": "Open Changes of Current Line",
+        "category": "Git Fate"
+      },
+      {
+        "command": "gitFate.refresh",
+        "title": "Refresh",
+        "category": "Git Fate",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "gitFate.openCommitChanges",
+        "title": "Open Changes",
+        "category": "Git Fate",
+        "icon": "$(compare-changes)"
+      },
+      {
+        "command": "gitFate.openFileAtRevision",
+        "title": "Open File at Revision",
+        "category": "Git Fate",
+        "icon": "$(go-to-file)"
+      },
+      {
+        "command": "gitFate.showCommit",
+        "title": "Show Commit Files",
+        "category": "Git Fate",
+        "icon": "$(git-commit)"
+      },
+      {
+        "command": "gitFate.copySha",
+        "title": "Copy Commit SHA",
+        "category": "Git Fate",
+        "icon": "$(copy)"
+      },
+      {
+        "command": "gitFate.copyMessage",
+        "title": "Copy Commit Message",
+        "category": "Git Fate"
+      },
+      {
+        "command": "gitFate.openCommitOnRemote",
+        "title": "Open Commit on Remote",
+        "category": "Git Fate",
+        "icon": "$(link-external)"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "gitFate",
+          "title": "Git Fate",
+          "icon": "media/activity.svg"
+        }
+      ]
+    },
+    "views": {
+      "gitFate": [
+        {
+          "id": "gitFate.fileHistory",
+          "name": "File History",
+          "icon": "$(history)"
+        },
+        {
+          "id": "gitFate.lineHistory",
+          "name": "Line History",
+          "icon": "$(list-selection)"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "gitFate.fileHistory",
+        "contents": "Open a file tracked by git to see its history."
+      },
+      {
+        "view": "gitFate.lineHistory",
+        "contents": "Select lines in a file tracked by git to see their history."
+      }
+    ],
+    "menus": {
+      "editor/title": [
+        {
+          "command": "gitFate.toggleFileBlame",
+          "when": "resourceScheme == file && config.gitFate.fileBlame.showInEditorTitle",
+          "group": "navigation@100"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "gitFate.showLineCommit",
+          "when": "resourceScheme == file",
+          "group": "gitFate@1"
+        },
+        {
+          "command": "gitFate.openLineChanges",
+          "when": "resourceScheme == file",
+          "group": "gitFate@2"
+        },
+        {
+          "command": "gitFate.showFileHistory",
+          "when": "resourceScheme == file",
+          "group": "gitFate@3"
+        },
+        {
+          "command": "gitFate.showLineHistory",
+          "when": "resourceScheme == file",
+          "group": "gitFate@4"
+        },
+        {
+          "command": "gitFate.toggleFileBlame",
+          "when": "resourceScheme == file",
+          "group": "gitFate@5"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "gitFate.showFileHistory",
+          "when": "!explorerResourceIsFolder",
+          "group": "gitFate@1"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "gitFate.refresh",
+          "when": "view == gitFate.fileHistory || view == gitFate.lineHistory",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "gitFate.openCommitChanges",
+          "when": "viewItem == gitFate.commit",
+          "group": "inline@1"
+        },
+        {
+          "command": "gitFate.openFileAtRevision",
+          "when": "viewItem == gitFate.commit",
+          "group": "inline@2"
+        },
+        {
+          "command": "gitFate.openCommitChanges",
+          "when": "viewItem == gitFate.commit",
+          "group": "1_open@1"
+        },
+        {
+          "command": "gitFate.openFileAtRevision",
+          "when": "viewItem == gitFate.commit",
+          "group": "1_open@2"
+        },
+        {
+          "command": "gitFate.showCommit",
+          "when": "viewItem == gitFate.commit",
+          "group": "1_open@3"
+        },
+        {
+          "command": "gitFate.openCommitOnRemote",
+          "when": "viewItem == gitFate.commit",
+          "group": "1_open@4"
+        },
+        {
+          "command": "gitFate.copySha",
+          "when": "viewItem == gitFate.commit",
+          "group": "2_copy@1"
+        },
+        {
+          "command": "gitFate.copyMessage",
+          "when": "viewItem == gitFate.commit",
+          "group": "2_copy@2"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "gitFate.openCommitChanges",
+          "when": "false"
+        },
+        {
+          "command": "gitFate.openFileAtRevision",
+          "when": "false"
+        },
+        {
+          "command": "gitFate.showCommit",
+          "when": "false"
+        },
+        {
+          "command": "gitFate.copySha",
+          "when": "false"
+        },
+        {
+          "command": "gitFate.copyMessage",
+          "when": "false"
+        },
+        {
+          "command": "gitFate.openCommitOnRemote",
+          "when": "false"
+        },
+        {
+          "command": "gitFate.refresh",
+          "when": "false"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "gitFate.toggleFileBlame",
+        "key": "alt+b",
+        "mac": "alt+b",
+        "when": "editorTextFocus"
+      }
+    ],
+    "configuration": {
+      "title": "Git Fate",
+      "properties": {
+        "gitFate.currentLine.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show blame of the current line at the end of the line."
+        },
+        "gitFate.currentLine.format": {
+          "type": "string",
+          "default": "${author}, ${ago} • ${message}",
+          "markdownDescription": "Format of the current line blame. Tokens: `${author}`, `${email}`, `${ago}`, `${date}`, `${message}`, `${sha}`."
+        },
+        "gitFate.statusBar.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show blame of the current line in the status bar."
+        },
+        "gitFate.fileBlame.heatmap": {
+          "type": "boolean",
+          "default": true,
+          "description": "Color the file blame gutter by the age of each change."
+        },
+        "gitFate.fileBlame.showInEditorTitle": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show the Toggle File Blame button in the editor title bar."
+        },
+        "gitFate.dateFormat": {
+          "type": "string",
+          "enum": [
+            "relative",
+            "absolute"
+          ],
+          "default": "relative",
+          "description": "How dates are shown in blame annotations."
+        },
+        "gitFate.history.limit": {
+          "type": "number",
+          "default": 200,
+          "minimum": 1,
+          "description": "Maximum number of commits loaded into the File History and Line History views."
+        }
+      }
+    },
+    "colors": [
+      {
+        "id": "gitFate.inlineBlameForeground",
+        "description": "Text color of the current line blame.",
+        "defaults": {
+          "dark": "#ffffff59",
+          "light": "#00000066",
+          "highContrast": "#ffffffa0"
+        }
+      },
+      {
+        "id": "gitFate.gutterForeground",
+        "description": "Text color of the file blame gutter.",
+        "defaults": {
+          "dark": "#bebebe",
+          "light": "#5a5a5a",
+          "highContrast": "#ffffff"
+        }
+      },
+      {
+        "id": "gitFate.gutterBackground",
+        "description": "Background color of the file blame gutter.",
+        "defaults": {
+          "dark": "#ffffff0d",
+          "light": "#0000000a",
+          "highContrast": "#00000000"
+        }
+      }
+    ]
+  },
+  "scripts": {
+    "build": "npm run typecheck && node scripts/build.mjs",
+    "watch": "node scripts/build.mjs --watch",
+    "typecheck": "tsc -p . --noEmit",
+    "lint": "eslint . && prettier --check .",
+    "format": "prettier --write .",
+    "compile-tests": "tsc -p tsconfig.test.json",
+    "test:unit": "npm run compile-tests && node --test \"out/test/unit/**/*.test.js\"",
+    "test:integration": "npm run build && npm run compile-tests && node out/test/integration/runTests.js",
+    "test": "npm run test:unit && npm run test:integration",
+    "package": "npm run build && vsce package --no-dependencies",
+    "vscode:prepublish": "node scripts/build.mjs --production"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.0",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^22.20.5",
+    "@types/vscode": "~1.90.0",
+    "@vscode/test-electron": "^3.1.0",
+    "@vscode/vsce": "^4.1.1",
+    "esbuild": "^0.28.2",
+    "eslint": "^9.39.0",
+    "mocha": "^11.7.0",
+    "prettier": "^3.10.1",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.74.0"
+  }
+}

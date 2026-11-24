@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <rect width="256" height="256" rx="52" fill="#182131"/>
+  <!-- commit line -->
+  <path d="M64 44v168" stroke="#5b6b85" stroke-width="10" stroke-linecap="round"/>
+  <circle cx="64" cy="64" r="17" fill="#182131" stroke="#f58228" stroke-width="10"/>
+  <circle cx="64" cy="128" r="17" fill="#182131" stroke="#b9925a" stroke-width="10"/>
+  <circle cx="64" cy="192" r="17" fill="#182131" stroke="#4682dc" stroke-width="10"/>
+  <!-- blamed lines, colored by age -->
+  <rect x="104" y="54" width="112" height="20" rx="10" fill="#f58228"/>
+  <rect x="104" y="118" width="84" height="20" rx="10" fill="#b9925a"/>
+  <rect x="104" y="182" width="100" height="20" rx="10" fill="#4682dc"/>
+  <rect x="104" y="86" width="64" height="12" rx="6" fill="#3a475e"/>
+  <rect x="104" y="150" width="96" height="12" rx="6" fill="#3a475e"/>
+</svg>
