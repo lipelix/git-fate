@@ -10,7 +10,8 @@
 
 <p align="center">
   <a href="https://github.com/lipelix/git-fate/actions/workflows/ci.yml"><img src="https://github.com/lipelix/git-fate/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
-  <a href="https://github.com/lipelix/git-fate/releases/latest"><img src="https://img.shields.io/github/v/release/lipelix/git-fate?label=release" alt="Latest release"></a>
+  <a href="https://marketplace.visualstudio.com/items?itemName=lipelix.git-fate"><img src="https://img.shields.io/github/v/release/lipelix/git-fate?label=VS%20Marketplace&color=007acc" alt="VS Marketplace"></a>
+  <a href="https://open-vsx.org/extension/lipelix/git-fate"><img src="https://img.shields.io/open-vsx/v/lipelix/git-fate?label=Open%20VSX&color=a60ee5" alt="Open VSX"></a>
   <img src="https://img.shields.io/badge/VS%20Code-1.90%2B-007acc" alt="VS Code 1.90+">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="MIT license"></a>
 </p>
@@ -73,13 +74,15 @@ Every commit opens as a side-by-side diff of the file before and after, with syn
 
 ## Install
 
-**From a release:** download `git-fate-<version>.vsix` from the [latest release](https://github.com/lipelix/git-fate/releases/latest), then:
+**VS Code:** install [Git Fate from the Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=lipelix.git-fate), or search for `Git Fate` in the **Extensions** view, or run:
 
 ```bash
-code --install-extension git-fate-0.1.0.vsix
+code --install-extension lipelix.git-fate
 ```
 
-Or in VS Code: **Extensions** view → `...` menu → **Install from VSIX...**
+**VSCodium, Cursor, Windsurf and other editors that use Open VSX:** install [Git Fate from Open VSX](https://open-vsx.org/extension/lipelix/git-fate).
+
+**From a release:** download `git-fate-<version>.vsix` from the [latest release](https://github.com/lipelix/git-fate/releases/latest), then in VS Code: **Extensions** view → `...` menu → **Install from VSIX...**
 
 **From source:**
 
@@ -144,6 +147,8 @@ npm run test:integration  # the extension inside a downloaded VS Code
 ```
 
 Press `F5` in VS Code to start an Extension Development Host. `scripts/demo-repo.sh <dir>` creates a small repository with several authors to try things on.
+
+To release, bump `version` in `package.json`, add a `CHANGELOG.md` section and push a `v<version>` tag. The release workflow tests, packages and publishes to the Visual Studio Marketplace, Open VSX and GitHub Releases.
 
 ## License
 

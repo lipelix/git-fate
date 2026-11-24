@@ -1,0 +1,60 @@
+name: release
+on:
+  push:
+    tags: ['v*']
+permissions:
+  contents: read
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # GitHub release
+      id-token: write # Marketplace and Open VSX trusted publishing
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Check tag matches package.json
+        run: |
+          version=$(node -p "require('./package.json').version")
+          if [ "v$version" != "$GITHUB_REF_NAME" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match package.json version $version"
+            exit 1
+          fi
+          echo "VERSION=$version" >> "$GITHUB_ENV"
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run build
+      - run: npm run test:unit
+      - name: Integration tests
+        run: |
+          if ! command -v xvfb-run >/dev/null; then
+            sudo apt-get update && sudo apt-get install -y xvfb libnss3 libatk1.0-0 libatk-bridge2.0-0 libgtk-3-0 libgbm1 libasound2t64 || sudo apt-get install -y xvfb libnss3 libatk1.0-0 libatk-bridge2.0-0 libgtk-3-0 libgbm1 libasound2
+          fi
+          xvfb-run -a npm run test:integration
+      - name: Package
+        run: |
+          npx vsce package --no-dependencies --out "git-fate-$VERSION.vsix"
+          echo "VSIX=git-fate-$VERSION.vsix" >> "$GITHUB_ENV"
+      - name: Publish to Visual Studio Marketplace
+        run: npx vsce publish --oidc --skip-duplicate --packagePath "$VSIX"
+      - name: Publish to Open VSX
+        env:
+          # The first version needs an access token; later versions can use trusted publishing.
+          OVSX_PAT: ${{ secrets.OVSX_PAT }}
+        run: npx --yes ovsx@1.4.0 publish --skip-duplicate --packagePath "$VSIX"
+      - name: GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" "$VSIX" --clobber
+          else
+            notes=$(awk -v v="$VERSION" '$0 ~ "^## \\[?"v {f=1; next} f && /^## / {exit} f' CHANGELOG.md)
+            gh release create "$GITHUB_REF_NAME" "$VSIX" --title "Git Fate $VERSION" --notes "${notes:-See CHANGELOG.md}"
+          fi
