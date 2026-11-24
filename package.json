@@ -2,7 +2,7 @@
   "name": "git-fate",
   "displayName": "Git Fate",
   "description": "See who changed every line, when and why: inline blame, file blame heatmap, file history and line history. Free, light, private.",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "publisher": "lipelix",
   "license": "MIT",
   "repository": {

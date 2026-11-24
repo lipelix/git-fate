@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.1
+
+- Icon has transparent rounded corners instead of a white square.
+
 ## 0.1.0
 
 - Current line blame at the end of the line, with a hover that shows the full message and actions.
