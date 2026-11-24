@@ -1,13 +1,17 @@
 {
   "name": "git-fate",
   "displayName": "Git Fate",
-  "description": "Inline git blame, file blame with heatmap, file history and line history for VS Code.",
+  "description": "See who changed every line, when and why: inline blame, file blame heatmap, file history and line history. Free, light, private.",
   "version": "0.1.0",
   "publisher": "lipelix",
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/lipelix/git-fate.git"
+  },
+  "homepage": "https://github.com/lipelix/git-fate#readme",
+  "bugs": {
+    "url": "https://github.com/lipelix/git-fate/issues"
   },
   "engines": {
     "vscode": "^1.90.0"
@@ -19,11 +23,20 @@
   "keywords": [
     "git",
     "blame",
+    "git blame",
     "history",
+    "file history",
+    "line history",
     "annotate",
-    "line history"
+    "heatmap",
+    "log",
+    "diff"
   ],
   "icon": "media/icon.png",
+  "galleryBanner": {
+    "color": "#182131",
+    "theme": "dark"
+  },
   "main": "./dist/extension.js",
   "activationEvents": [
     "onStartupFinished"
