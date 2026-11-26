@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.3.0
 
 - **Worktrees** view: every worktree of the repository with its task (lock reason or branch description), commits ahead of the base branch, changed files and last activity. Built for several agents working on one repository at once.
 - Files changed in more than one worktree get a warning in the view, in the status bar and on top of the file in the editor, with a diff against the other worktree's version.
