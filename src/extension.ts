@@ -7,6 +7,13 @@ import { CurrentLineBlame } from './features/currentLine';
 import { FileBlame } from './features/fileBlame';
 import { HistoryProvider } from './features/history';
 import { REVISION_SCHEME, RevisionContentProvider } from './features/revision';
+import { WorktreeService } from './features/worktreeService';
+import {
+  registerWorktreeCommands,
+  WorktreeLensProvider,
+  WorktreesProvider,
+  WorktreeStatusBar,
+} from './features/worktrees';
 
 /** Returned from activate so integration tests can reach the internals. */
 export interface ExtensionApi {
@@ -16,6 +23,8 @@ export interface ExtensionApi {
   currentLine: CurrentLineBlame;
   fileHistory: HistoryProvider;
   lineHistory: HistoryProvider;
+  worktrees: WorktreeService;
+  worktreesView: WorktreesProvider;
 }
 
 interface BuiltinGitRepository {
@@ -84,6 +93,15 @@ export function activate(context: vscode.ExtensionContext): ExtensionApi {
   fileHistory.attach(fileView);
   lineHistory.attach(lineView);
 
+  const worktrees = new WorktreeService(git);
+  const worktreesView = new WorktreesProvider(worktrees);
+  const worktreeTree = vscode.window.createTreeView('gitFate.worktrees', {
+    treeDataProvider: worktreesView,
+    showCollapseAll: true,
+  });
+  worktreesView.attach(worktreeTree);
+  const worktreeLens = new WorktreeLensProvider(worktrees);
+
   const lineCommand =
     (run: (ref: ReturnType<typeof refFromLineBlame>) => Promise<void>) =>
     async (): Promise<void> => {
@@ -107,6 +125,13 @@ export function activate(context: vscode.ExtensionContext): ExtensionApi {
     lineHistory,
     fileView,
     lineView,
+    worktrees,
+    worktreesView,
+    worktreeTree,
+    worktreeLens,
+    new WorktreeStatusBar(worktrees),
+    vscode.languages.registerCodeLensProvider({ scheme: 'file' }, worktreeLens),
+    ...registerWorktreeCommands(worktrees, git),
     vscode.workspace.registerTextDocumentContentProvider(
       REVISION_SCHEME,
       new RevisionContentProvider(git),
@@ -161,9 +186,10 @@ export function activate(context: vscode.ExtensionContext): ExtensionApi {
   void watchRepositories(() => {
     actions.clearCaches();
     blame.invalidate();
+    worktrees.schedule(500);
   }).then((disposables) => context.subscriptions.push(...disposables));
 
-  return { git, blame, fileBlame, currentLine, fileHistory, lineHistory };
+  return { git, blame, fileBlame, currentLine, fileHistory, lineHistory, worktrees, worktreesView };
 }
 
 export function deactivate(): void {

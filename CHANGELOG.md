@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- **Worktrees** view: every worktree of the repository with its task (lock reason or branch description), commits ahead of the base branch, changed files and last activity. Built for several agents working on one repository at once.
+- Files changed in more than one worktree get a warning in the view, in the status bar and on top of the file in the editor, with a diff against the other worktree's version.
+- **Set Worktree Task** writes the lock reason (`git worktree lock --reason`) or, for the main worktree, the branch description.
+
 ## 0.2.0
 
 - The blame hover previews the change that touched the line: removed and added lines with a little context, like a small diff. Turn it off with `gitFate.hover.diff`.
