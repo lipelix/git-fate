@@ -72,6 +72,29 @@ Every commit opens as a side-by-side diff of the file before and after, with syn
 
 ![Diff of a commit](images/commit-diff.png)
 
+### Worktrees: who works on what
+
+Several agents or people on one repository, each in its own `git worktree`? The **Worktrees** view in the Git Fate sidebar lists them all, with what each one works on, what it changed against the base branch (`origin/HEAD`, else `main`) and how recently:
+
+- **Task** of each worktree: its lock reason, else its branch description, else its last commit.
+- **Active** worktrees (a change in the last 10 minutes) get a green dot; idle ones an empty circle.
+- **Commits ahead** of the base branch and **changed files**, committed or not. Click a file to see everything the worktree changed in it.
+- **Collisions:** a file changed in more than one worktree gets a ⚠ in the view, and a line on top of the file in the editor names the other worktrees. Click it to compare the two versions.
+- The status bar shows active worktrees and collisions, e.g. `2/4 ⚠ 1`.
+
+Hover a worktree for details. Its inline buttons open all its changes, set its task, or open it in a new window.
+
+![Worktrees view and the warning on top of a file changed in other worktrees](images/worktrees.png)
+
+**Tell Git Fate what a worktree is for.** Git Fate reads only plain git, so it works with any agent, script or person. Lock the worktree with the task as the reason when you create it:
+
+```bash
+git worktree add -b feat/checkout-totals ../checkout-totals
+git worktree lock --reason "agent-1 · #42 checkout totals with tax" ../checkout-totals
+```
+
+The lock also keeps `git worktree prune` from removing the worktree. The main worktree cannot be locked, so its task is the branch description (`git branch --edit-description`). **Set Worktree Task** in the view writes either for you.
+
 ## Install
 
 **VS Code:** install [Git Fate from the Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=lipelix.git-fate), or search for `Git Fate` in the **Extensions** view, or run:
@@ -106,6 +129,9 @@ Requires VS Code 1.90 or newer and `git` on your `PATH` (or set in VS Code's `gi
 | Git Fate: Show Line History            |         |
 | Git Fate: Show Commit of Current Line  |         |
 | Git Fate: Open Changes of Current Line |         |
+| Git Fate: Set Worktree Task            |         |
+| Git Fate: Open All Changes of Worktree |         |
+| Git Fate: Open Worktree in New Window  |         |
 
 The line commands are also in the editor's right-click menu. **Show File History** is in the Explorer's right-click menu.
 
@@ -121,6 +147,9 @@ The line commands are also in the editor's right-click menu. **Show File History
 | `gitFate.fileBlame.showInEditorTitle` | `true`                           | Show the Toggle File Blame button in the editor title.                        |
 | `gitFate.dateFormat`                  | `relative`                       | `relative` (3 days ago) or `absolute` (2026-11-24 09:15).                     |
 | `gitFate.history.limit`               | `200`                            | Most commits loaded into each history view.                                   |
+| `gitFate.worktrees.watch`             | `true`                           | Check worktrees in the background for the status bar and the file warning.    |
+| `gitFate.worktrees.baseBranch`        | empty                            | Branch worktrees are compared with. Empty: `origin/HEAD`, `main` or `master`. |
+| `gitFate.worktrees.activeMinutes`     | `10`                             | A worktree with a change newer than this counts as active.                    |
 
 Colors are themable in `workbench.colorCustomizations`: `gitFate.inlineBlameForeground`, `gitFate.gutterForeground`, `gitFate.gutterBackground`.
 
@@ -131,6 +160,9 @@ Recent VS Code versions have their own blame there. Keep one: set `"git.blame.st
 
 **Why is a line I just typed shown as uncommitted?**
 Git Fate blames what is in the editor, including unsaved changes. Lines that are not in any commit yet are labeled _Uncommitted changes_.
+
+**How much does watching worktrees cost?**
+With one worktree, a single `git worktree list` every 15 seconds while the window has focus. With more, one `git status` and a diff against the base branch per worktree. Turn it off with `gitFate.worktrees.watch`; the view then reads worktrees only while it is open.
 
 **Does it work with large files and long histories?**
 Blame runs once per document version and is reused while you move around. The history views load on demand, up to `gitFate.history.limit` commits.

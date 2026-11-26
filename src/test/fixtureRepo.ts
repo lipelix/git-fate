@@ -9,7 +9,7 @@ export interface FixtureRepo {
   cleanup(): void;
 }
 
-function git(cwd: string, args: string[], env: Record<string, string> = {}): string {
+export function git(cwd: string, args: string[], env: Record<string, string> = {}): string {
   return execFileSync('git', args, {
     cwd,
     encoding: 'utf8',

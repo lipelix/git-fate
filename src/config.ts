@@ -10,6 +10,9 @@ export interface Config {
   heatmap: boolean;
   dateFormat: DateFormat;
   historyLimit: number;
+  worktreesWatch: boolean;
+  worktreesBaseBranch: string;
+  worktreesActiveMinutes: number;
 }
 
 export function readConfig(): Config {
@@ -22,6 +25,9 @@ export function readConfig(): Config {
     heatmap: c.get<boolean>('fileBlame.heatmap', true),
     dateFormat: c.get<DateFormat>('dateFormat', 'relative'),
     historyLimit: c.get<number>('history.limit', 200),
+    worktreesWatch: c.get<boolean>('worktrees.watch', true),
+    worktreesBaseBranch: c.get<string>('worktrees.baseBranch', '').trim(),
+    worktreesActiveMinutes: c.get<number>('worktrees.activeMinutes', 10),
   };
 }
 

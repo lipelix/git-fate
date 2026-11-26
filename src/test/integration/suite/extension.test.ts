@@ -3,7 +3,10 @@ import * as path from 'node:path';
 import * as vscode from 'vscode';
 import type { ExtensionApi } from '../../../extension';
 import type { CommitItem } from '../../../features/history';
+import type { WorktreeFileItem, WorktreeItem } from '../../../features/worktrees';
 import { UNCOMMITTED_SHA } from '../../../git/types';
+import { git } from '../../fixtureRepo';
+import * as fs from 'node:fs';
 
 interface Fixture {
   root: string;
@@ -176,5 +179,113 @@ describe('Git Fate', () => {
       return input instanceof vscode.TabInputTextDiff ? input : undefined;
     }, 'working diff tab');
     assert.equal(tab.modified.scheme, 'file');
+  });
+
+  describe('Worktrees', () => {
+    let agent: string;
+
+    before(() => {
+      // The main worktree still has the saved edit of src/greeter.ts from the tests above.
+      agent = path.join(fx.root, '.worktrees', 'agent-a');
+      git(fx.root, ['worktree', 'add', '-q', '-b', 'feat/agent-a', agent]);
+      git(fx.root, ['worktree', 'lock', '--reason', 'agent-a · rewrite the greeter', agent]);
+      fs.writeFileSync(path.join(agent, 'src', 'extra.ts'), 'extra\n');
+      git(agent, ['add', 'src/extra.ts']);
+      git(agent, ['commit', '-q', '-m', 'Add extra']);
+      fs.writeFileSync(path.join(agent, 'src', 'greeter.ts'), 'rewritten\n');
+    });
+
+    it('reads every worktree, its task and the files two of them change', async () => {
+      const snapshot = await api.worktrees.refresh();
+      assert.ok(snapshot);
+      assert.equal(snapshot.base, 'main');
+      const [main, other] = snapshot.worktrees;
+      assert.equal(main.name, 'main');
+      assert.equal(main.isCurrent, true);
+      assert.deepEqual(
+        main.files.map((f) => f.path),
+        ['src/greeter.ts'],
+        'the nested worktree is not an untracked change of the main one',
+      );
+      assert.equal(other.name, 'feat/agent-a');
+      assert.equal(other.task, 'agent-a · rewrite the greeter');
+      assert.equal(other.taskSource, 'lock');
+      assert.equal(other.ahead, 1);
+      assert.equal(other.active, true);
+      assert.deepEqual(
+        other.files.map((f) => [f.path, f.status, f.committed, f.uncommitted]),
+        [
+          ['src/extra.ts', 'A', true, false],
+          ['src/greeter.ts', 'M', false, true],
+        ],
+      );
+      assert.deepEqual([...snapshot.overlaps.keys()], ['src/greeter.ts']);
+    });
+
+    it('shows the worktrees in the view with the overlap first', async () => {
+      const roots = api.worktreesView.getChildren() as WorktreeItem[];
+      assert.deepEqual(
+        roots.map((r) => r.label),
+        ['main', 'feat/agent-a'],
+      );
+      assert.match(String(roots[1].description), /agent-a · rewrite the greeter · .* · ⚠ 1/);
+      assert.match(String(roots[0].description), /^this window · /);
+      const children = api.worktreesView.getChildren(roots[1]);
+      assert.deepEqual(
+        children.map((c) => c.label),
+        ['agent-a · rewrite the greeter', '1 commit ahead of main', 'greeter.ts', 'extra.ts'],
+      );
+      assert.match(String(children[2].description), /also in main/);
+      const commits = api.worktreesView.getChildren(children[1]);
+      assert.deepEqual(
+        commits.map((c) => c.label),
+        ['Add extra'],
+      );
+    });
+
+    it('warns on top of a file another worktree changes too', async () => {
+      const lenses = await vscode.commands.executeCommand<vscode.CodeLens[]>(
+        'vscode.executeCodeLensProvider',
+        file,
+      );
+      const titles = lenses.map((l) => l.command?.title ?? '');
+      assert.ok(
+        titles.some((t) => /feat\/agent-a: agent-a · rewrite the greeter/.test(t)),
+        titles.join('\n'),
+      );
+      const lens = lenses.find((l) => l.command?.command === 'gitFate.compareWithWorktree')!;
+      await vscode.commands.executeCommand(lens.command!.command, ...lens.command!.arguments!);
+      const tab = await waitFor(() => {
+        const input = vscode.window.tabGroups.activeTabGroup.activeTab?.input;
+        return input instanceof vscode.TabInputTextDiff ? input : undefined;
+      }, 'compare with worktree tab');
+      assert.equal(tab.original.fsPath, path.join(agent, 'src', 'greeter.ts'));
+      assert.equal(tab.modified.fsPath, file.fsPath);
+      await vscode.commands.executeCommand('workbench.action.closeActiveEditor');
+    });
+
+    it('opens the changes of a file in a worktree against its base', async () => {
+      const roots = api.worktreesView.getChildren() as WorktreeItem[];
+      const greeter = api.worktreesView
+        .getChildren(roots[1])
+        .find((c) => c.label === 'greeter.ts') as WorktreeFileItem;
+      await vscode.commands.executeCommand('gitFate.openWorktreeFile', greeter);
+      const tab = await waitFor(() => {
+        const input = vscode.window.tabGroups.activeTabGroup.activeTab?.input;
+        return input instanceof vscode.TabInputTextDiff ? input : undefined;
+      }, 'worktree diff tab');
+      const left = await vscode.workspace.openTextDocument(tab.original);
+      assert.equal(left.getText(), 'a1\nb2\na3\nc4\na5\nd6\n');
+      assert.equal(tab.modified.fsPath, path.join(agent, 'src', 'greeter.ts'));
+      await vscode.commands.executeCommand('workbench.action.closeActiveEditor');
+
+      await vscode.commands.executeCommand('gitFate.openWorktreeChanges', roots[1]);
+      const label = await waitFor(() => {
+        const tab = vscode.window.tabGroups.activeTabGroup.activeTab;
+        return tab?.label.includes('feat/agent-a') ? tab.label : undefined;
+      }, 'multi diff tab');
+      assert.match(label, /feat\/agent-a ↔ main/);
+      await vscode.commands.executeCommand('workbench.action.closeActiveEditor');
+    });
   });
 });

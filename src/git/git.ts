@@ -3,6 +3,13 @@ import * as path from 'path';
 import { parseBlamePorcelain } from './blameParser';
 import { LOG_FORMAT, parseLog, parseNameStatus } from './logParser';
 import { BlameResult, FileChange, LogEntry } from './types';
+import {
+  parseNameStatusZ,
+  parseStatusV2,
+  parseWorktreeList,
+  StatusFile,
+  WorktreeEntry,
+} from './worktreeParser';
 
 export class GitError extends Error {
   constructor(
@@ -208,6 +215,91 @@ export class Git {
       okCodes: [1],
     });
     return exitCode === 1;
+  }
+
+  /** Worktrees of the repository that contains `cwd`; the main worktree comes first. */
+  async worktrees(cwd: string): Promise<WorktreeEntry[]> {
+    const { stdout } = await this.run(cwd, ['worktree', 'list', '--porcelain']);
+    return parseWorktreeList(stdout);
+  }
+
+  /** Uncommitted changes of a working tree, untracked files listed one by one. */
+  async workingStatus(root: string): Promise<StatusFile[]> {
+    const { stdout } = await this.run(root, [
+      'status',
+      '--porcelain=v2',
+      '-z',
+      '--untracked-files=all',
+      '--ignore-submodules=all',
+    ]);
+    return parseStatusV2(stdout);
+  }
+
+  /** Files that differ between two commits, renames detected. */
+  async changedFiles(root: string, from: string, to: string): Promise<StatusFile[]> {
+    const { stdout } = await this.run(root, ['diff', '--name-status', '-z', '-M', from, to]);
+    return parseNameStatusZ(stdout);
+  }
+
+  /** Commits reachable from `to` but not from `from`, newest first. */
+  async commitsBetween(root: string, from: string, to: string, limit: number): Promise<LogEntry[]> {
+    const { stdout } = await this.run(root, ['log', LOG_FORMAT, `-n${limit}`, `${from}..${to}`]);
+    return parseLog(stdout);
+  }
+
+  async countCommits(root: string, from: string, to: string): Promise<number> {
+    const { stdout } = await this.run(root, ['rev-list', '--count', `${from}..${to}`]);
+    return Number(stdout.trim()) || 0;
+  }
+
+  async mergeBase(root: string, a: string, b: string): Promise<string | undefined> {
+    const { stdout, exitCode } = await this.run(root, ['merge-base', a, b], { okCodes: [1, 128] });
+    return exitCode === 0 ? stdout.trim() || undefined : undefined;
+  }
+
+  /** `refs/remotes/origin/HEAD` as `origin/main`, when the clone knows it. */
+  async remoteDefaultBranch(root: string): Promise<string | undefined> {
+    const { stdout, exitCode } = await this.run(
+      root,
+      ['symbolic-ref', '--quiet', '--short', 'refs/remotes/origin/HEAD'],
+      { okCodes: [1, 128] },
+    );
+    return exitCode === 0 ? stdout.trim() || undefined : undefined;
+  }
+
+  /** True when `ref` names a commit. */
+  async refExists(root: string, ref: string): Promise<boolean> {
+    const { exitCode } = await this.run(
+      root,
+      ['rev-parse', '--verify', '--quiet', `${ref}^{commit}`],
+      { okCodes: [1, 128] },
+    );
+    return exitCode === 0;
+  }
+
+  async branchDescription(root: string, branch: string): Promise<string | undefined> {
+    const { stdout } = await this.run(root, ['config', `branch.${branch}.description`], {
+      okCodes: [1],
+    });
+    return stdout.trim() || undefined;
+  }
+
+  async setBranchDescription(root: string, branch: string, text: string): Promise<void> {
+    const key = `branch.${branch}.description`;
+    await this.run(root, text ? ['config', key, text] : ['config', '--unset', key], {
+      okCodes: [5],
+    });
+  }
+
+  /** Locks a linked worktree with `reason`, or unlocks it when the reason is empty. */
+  async setWorktreeLock(root: string, worktree: string, reason: string): Promise<void> {
+    const entry = (await this.worktrees(root)).find((w) => w.path === worktree);
+    if (entry?.locked !== undefined) {
+      await this.run(root, ['worktree', 'unlock', worktree]);
+    }
+    if (reason) {
+      await this.run(root, ['worktree', 'lock', '--reason', reason, worktree]);
+    }
   }
 
   /** URL of the upstream remote of HEAD, else `origin`, else the first remote. */
