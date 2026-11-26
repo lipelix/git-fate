@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.0
+
+- The blame hover previews the change that touched the line: removed and added lines with a little context, like a small diff. Turn it off with `gitFate.hover.diff`.
+
 ## 0.1.1
 
 - Icon has transparent rounded corners instead of a white square.

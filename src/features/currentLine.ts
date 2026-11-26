@@ -1,11 +1,12 @@
 import * as vscode from 'vscode';
 import { Config, readConfig } from '../config';
 import { Git } from '../git/git';
+import { excerptForLine, parseHunks } from '../git/diffParser';
 import { isUncommitted } from '../git/types';
 import { interpolate, shortSha, truncate } from '../util/format';
 import { BlameService, LineBlame, refFromLineBlame } from './blameService';
 import { CommitActions } from './commands';
-import { commitMarkdown, displayAuthor, displayDate } from './commit';
+import { CommitRef, commitMarkdown, displayAuthor, displayDate } from './commit';
 
 interface Shown {
   uri: string;
@@ -181,14 +182,35 @@ export class CurrentLineBlame implements vscode.Disposable {
     }
     const { commit, blame } = shown.lineBlame;
     const ref = refFromLineBlame(shown.lineBlame);
-    const [full, remote] = isUncommitted(commit.sha)
-      ? [undefined, undefined]
-      : await Promise.all([
-          this.git.commit(blame.root, commit.sha).catch(() => undefined),
-          this.actions.remoteUrl(blame.root),
-        ]);
-    const md = commitMarkdown(full ?? commit, ref, blame.userEmail, { remote: Boolean(remote) });
+    const [full, remote, diff] = await Promise.all([
+      isUncommitted(commit.sha)
+        ? undefined
+        : this.git.commit(blame.root, commit.sha).catch(() => undefined),
+      isUncommitted(commit.sha) ? undefined : this.actions.remoteUrl(blame.root),
+      this.config.hoverDiff ? this.lineDiff(ref, document).catch(() => undefined) : undefined,
+    ]);
+    const md = commitMarkdown(full ?? commit, ref, blame.userEmail, {
+      remote: Boolean(remote),
+      diff,
+    });
     return new vscode.Hover(md, new vscode.Range(end, end));
+  }
+  /** The part of the commit's diff that changed the hovered line. */
+  private async lineDiff(ref: CommitRef, document: vscode.TextDocument) {
+    if (ref.line === undefined) {
+      return undefined;
+    }
+    let diff: string;
+    if (isUncommitted(ref.sha)) {
+      // Line numbers of an unsaved buffer do not match the working copy on disk.
+      if (document.isDirty) {
+        return undefined;
+      }
+      diff = await this.git.workingDiff(ref.root, ref.relPath);
+    } else {
+      diff = await this.git.fileDiff(ref.root, ref.sha, ref.relPath, ref.previous);
+    }
+    return excerptForLine(parseHunks(diff), ref.line + 1);
   }
 
   dispose(): void {

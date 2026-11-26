@@ -6,6 +6,7 @@ export interface Config {
   currentLineEnabled: boolean;
   currentLineFormat: string;
   statusBarEnabled: boolean;
+  hoverDiff: boolean;
   heatmap: boolean;
   dateFormat: DateFormat;
   historyLimit: number;
@@ -17,6 +18,7 @@ export function readConfig(): Config {
     currentLineEnabled: c.get<boolean>('currentLine.enabled', true),
     currentLineFormat: c.get<string>('currentLine.format', '${author}, ${ago} • ${message}'),
     statusBarEnabled: c.get<boolean>('statusBar.enabled', true),
+    hoverDiff: c.get<boolean>('hover.diff', true),
     heatmap: c.get<boolean>('fileBlame.heatmap', true),
     dateFormat: c.get<DateFormat>('dateFormat', 'relative'),
     historyLimit: c.get<number>('history.limit', 200),

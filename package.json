@@ -2,7 +2,7 @@
   "name": "git-fate",
   "displayName": "Git Fate",
   "description": "See who changed every line, when and why: inline blame, file blame heatmap, file history and line history. Free, light, private.",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "publisher": "lipelix",
   "license": "MIT",
   "repository": {
@@ -293,6 +293,11 @@
           "type": "string",
           "default": "${author}, ${ago} • ${message}",
           "markdownDescription": "Format of the current line blame. Tokens: `${author}`, `${email}`, `${ago}`, `${date}`, `${message}`, `${sha}`."
+        },
+        "gitFate.hover.diff": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show the lines the commit changed around the current line in the blame hover."
         },
         "gitFate.statusBar.enabled": {
           "type": "boolean",

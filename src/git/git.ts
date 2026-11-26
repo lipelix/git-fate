@@ -170,6 +170,38 @@ export class Git {
     }
   }
 
+  /**
+   * Unified diff of one file in one commit. `previous` is the parent revision and the
+   * file's path there; without it (an added file or a root commit) the commit is shown
+   * against its parent by `git show`.
+   */
+  async fileDiff(
+    root: string,
+    sha: string,
+    relPath: string,
+    previous?: { sha: string; relPath: string },
+  ): Promise<string> {
+    const common = ['--no-color', '--no-ext-diff', '-U3', '-M'];
+    const args = previous
+      ? ['diff', ...common, previous.sha, sha, '--', previous.relPath, relPath]
+      : ['show', '--format=', ...common, sha, '--', relPath];
+    return (await this.run(root, args)).stdout;
+  }
+
+  /** Unified diff of the working copy of a file against HEAD. */
+  async workingDiff(root: string, relPath: string): Promise<string> {
+    const { stdout } = await this.run(root, [
+      'diff',
+      '--no-color',
+      '--no-ext-diff',
+      '-U3',
+      'HEAD',
+      '--',
+      relPath,
+    ]);
+    return stdout;
+  }
+
   /** True when the working copy of the file differs from HEAD. */
   async hasWorkingChanges(root: string, relPath: string): Promise<boolean> {
     const { exitCode } = await this.run(root, ['diff', '--quiet', 'HEAD', '--', relPath], {

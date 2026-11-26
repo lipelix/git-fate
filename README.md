@@ -35,7 +35,7 @@ You land on a strange line. Who wrote it? When? Was it a quick fix or part of a 
 
 ### Current line blame
 
-Move the cursor and the line tells you who changed it, how long ago and why. Hover the annotation for the full commit message and actions:
+Move the cursor and the line tells you who changed it, how long ago and why. Hover the annotation for the full commit message, a preview of the change that touched the line (removed lines in red, added in green) and actions:
 
 | Action             | What it does                                                    |
 | ------------------ | --------------------------------------------------------------- |
@@ -116,6 +116,7 @@ The line commands are also in the editor's right-click menu. **Show File History
 | `gitFate.currentLine.enabled`         | `true`                           | Show blame at the end of the current line.                                    |
 | `gitFate.currentLine.format`          | `${author}, ${ago} • ${message}` | Tokens: `${author}`, `${email}`, `${ago}`, `${date}`, `${message}`, `${sha}`. |
 | `gitFate.statusBar.enabled`           | `true`                           | Show blame of the current line in the status bar.                             |
+| `gitFate.hover.diff`                  | `true`                           | Show the change that touched the line in the blame hover.                     |
 | `gitFate.fileBlame.heatmap`           | `true`                           | Color the file blame by age.                                                  |
 | `gitFate.fileBlame.showInEditorTitle` | `true`                           | Show the Toggle File Blame button in the editor title.                        |
 | `gitFate.dateFormat`                  | `relative`                       | `relative` (3 days ago) or `absolute` (2026-11-24 09:15).                     |

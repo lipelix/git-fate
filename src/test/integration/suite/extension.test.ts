@@ -77,6 +77,7 @@ describe('Git Fate', () => {
     assert.match(text, /Longer body/);
     assert.match(text, /command:gitFate\.openCommitChanges/);
     assert.match(text, /Open on Remote/);
+    assert.match(text, /```diff\n a1\n-a2\n\+b2\n a3\n a4\n```/, 'diff of the line in the hover');
 
     editor.selection = new vscode.Selection(5, 0, 5, 0);
     const own = await waitFor(() => {

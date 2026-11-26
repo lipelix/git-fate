@@ -32,6 +32,19 @@ describe('Git against a real repository', () => {
     assert.deepEqual(r.commits.get(rename)!.previous, { sha: second, path: 'src/old.ts' });
   });
 
+  it('diffs one file of a commit across a rename and in the root commit', async () => {
+    const { initial, second, rename } = repo.shas;
+    const renamed = await git.fileDiff(repo.root, rename, 'src/greeter.ts', {
+      sha: second,
+      relPath: 'src/old.ts',
+    });
+    assert.match(renamed, /^-a4$/m);
+    assert.match(renamed, /^\+c4$/m);
+    assert.doesNotMatch(renamed, /^\+a1$/m, 'a rename must not show as a whole new file');
+    const root = await git.fileDiff(repo.root, initial, 'src/old.ts');
+    assert.match(root, /^\+a5$/m);
+  });
+
   it('blames unsaved contents as uncommitted', async () => {
     const r = await git.blame(repo.root, 'src/greeter.ts', 'a1\nNEW\nb2\na3\nc4\na5\nd6\n');
     assert.equal(r.lines[1].sha, UNCOMMITTED_SHA);
